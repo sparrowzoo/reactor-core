@@ -195,6 +195,7 @@ public final class DirectProcessor<T> extends FluxProcessor<T, T> implements Sin
 	@Override
 	public void emitNext(T value) {
 		switch(tryEmitNext(value)) {
+			case FAIL_ZERO_SUBSCRIBER:
 			case FAIL_OVERFLOW:
 				Operators.onDiscard(value, currentContext());
 				//the emitError will onErrorDropped if already terminated
@@ -224,6 +225,9 @@ public final class DirectProcessor<T> extends FluxProcessor<T, T> implements Sin
 
 		if (inners == TERMINATED) {
 			return Emission.FAIL_TERMINATED;
+		}
+		if (inners == EMPTY) {
+			return Emission.FAIL_ZERO_SUBSCRIBER;
 		}
 
 		for (DirectInner<T> s : inners) {
