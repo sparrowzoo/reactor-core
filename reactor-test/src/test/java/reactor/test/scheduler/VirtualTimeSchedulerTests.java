@@ -27,17 +27,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 import reactor.test.util.RaceTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static reactor.core.scheduler.Schedulers.newElastic;
-import static reactor.core.scheduler.Schedulers.newParallel;
-import static reactor.core.scheduler.Schedulers.newSingle;
-import static reactor.core.scheduler.Schedulers.single;
-import static reactor.test.scheduler.VirtualTimeScheduler.create;
-import static reactor.test.scheduler.VirtualTimeScheduler.get;
-import static reactor.test.scheduler.VirtualTimeScheduler.getOrSet;
 
 /**
  * @author Stephane Maldini
@@ -54,50 +48,50 @@ public class VirtualTimeSchedulerTests {
 
 	@Test
 	public void allEnabled() {
-		assertThat(newParallel("")).isNotInstanceOf(VirtualTimeScheduler.class);
-		assertThat(newElastic("")).isNotInstanceOf(VirtualTimeScheduler.class);
-		assertThat(newSingle("")).isNotInstanceOf(VirtualTimeScheduler.class);
+		assertThat(Schedulers.newParallel("")).isNotInstanceOf(VirtualTimeScheduler.class);
+		assertThat(Schedulers.newElastic("")).isNotInstanceOf(VirtualTimeScheduler.class);
+		assertThat(Schedulers.newSingle("")).isNotInstanceOf(VirtualTimeScheduler.class);
 
-		getOrSet();
+		VirtualTimeScheduler.getOrSet();
 
-		assertThat(newParallel("") instanceof VirtualTimeScheduler).isTrue();
-		assertThat(newElastic("") instanceof VirtualTimeScheduler).isTrue();
-		assertThat(newSingle("") instanceof VirtualTimeScheduler).isTrue();
+		assertThat(Schedulers.newParallel("") instanceof VirtualTimeScheduler).isTrue();
+		assertThat(Schedulers.newElastic("") instanceof VirtualTimeScheduler).isTrue();
+		assertThat(Schedulers.newSingle("") instanceof VirtualTimeScheduler).isTrue();
 
-		VirtualTimeScheduler t = get();
+		VirtualTimeScheduler t = VirtualTimeScheduler.get();
 
-		assertThat(newParallel("")).isSameAs(t);
-		assertThat(newElastic("")).isSameAs(t);
-		assertThat(newSingle("")).isSameAs(t);
+		assertThat(Schedulers.newParallel("")).isSameAs(t);
+		assertThat(Schedulers.newElastic("")).isSameAs(t);
+		assertThat(Schedulers.newSingle("")).isSameAs(t);
 	}
 
 	@Test
 	public void enableProvidedAllSchedulerIdempotent() {
-		VirtualTimeScheduler vts = create();
+		VirtualTimeScheduler vts = VirtualTimeScheduler.create();
 
-		getOrSet(vts);
+		VirtualTimeScheduler.getOrSet(vts);
 
-		assertThat(vts).isSameAs(uncache(single()));
+		assertThat(vts).isSameAs(uncache(Schedulers.single()));
 		assertThat(vts.shutdown).isFalse();
 
 
-		getOrSet(vts);
+		VirtualTimeScheduler.getOrSet(vts);
 
-		assertThat(vts).isSameAs(uncache(single()));
+		assertThat(vts).isSameAs(uncache(Schedulers.single()));
 		assertThat(vts.shutdown).isFalse();
 	}
 
 	@Test
 	public void enableTwoSimilarSchedulersUsesFirst() {
-		VirtualTimeScheduler vts1 = create();
-		VirtualTimeScheduler vts2 = create();
+		VirtualTimeScheduler vts1 = VirtualTimeScheduler.create();
+		VirtualTimeScheduler vts2 = VirtualTimeScheduler.create();
 
-		VirtualTimeScheduler firstEnableResult = getOrSet(vts1);
-		VirtualTimeScheduler secondEnableResult = getOrSet(vts2);
+		VirtualTimeScheduler firstEnableResult = VirtualTimeScheduler.getOrSet(vts1);
+		VirtualTimeScheduler secondEnableResult = VirtualTimeScheduler.getOrSet(vts2);
 
 		assertThat(vts1).isSameAs(firstEnableResult);
 		assertThat(vts1).isSameAs(secondEnableResult);
-		assertThat(vts1).isSameAs(uncache(single()));
+		assertThat(vts1).isSameAs(uncache(Schedulers.single()));
 		assertThat(vts1.shutdown).isFalse();
 	}
 
